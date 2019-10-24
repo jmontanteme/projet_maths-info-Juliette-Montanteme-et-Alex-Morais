@@ -3,8 +3,10 @@ import autograd
 from autograd import numpy as np
 from autograd import grad
 import matplotlib.pyplot as plt
+import itertools
 
-#from autograd import numpy as np
+
+
 def find_seed(g, c=0, eps=2**(-26)):
     if min(g(0,0), g(0,1)) <= c <= max(g(0,0), g(0,1)):
         a = 0
@@ -27,33 +29,44 @@ def vecteur_courbe_normalisé(v):
     if v[0] != 0 or v[1] != 0 : 
         norme = math.sqrt((v[0]**2)+(v[1]**2))
         return ([-v[1]/norme, v[0]/norme])
+    else : 
+        return v
 
-#def distcourbe()
+def distance_courbe(point, nuage): 
+    x = point[0]
+    y = point[1]
+    distances = []
+    for coord in zip(nuage[0], nuage[1]) : 
+        x_c = coord[0]
+        y_c = coord[1]
+        d = math.sqrt((x_c-x)**2+(y_c-y)**2)
+        distances.append(d)
+    return (min(distances))
 
 def simple_contour(f, c = 0.0, delta = 0.01):
-    courbe_abs = []
-    courbe_ord = []
+    abs_c = []
+    ord_c= []
     if find_seed(f, c) is None:
-        return(courbe_abs, courbe_ord)
+        return(abs_c, ord_c)
     else : 
-        courbe_abs.append(0.0)
-        courbe_ord.append(find_seed(f, c))
+        abs_c.append(0.0)
+        ord_c.append(find_seed(f, c))
         direc = 1
         # on va essayer de savoir s'il faut aller à gauche ou à droite
-        v = gradient(f, courbe_abs[-1], courbe_ord[-1])
-        x = courbe_abs[-1] + delta*vecteur_courbe_normalisé(v)[0]
-        y = courbe_ord[-1] + delta*vecteur_courbe_normalisé(v)[1]
+        v = gradient(f, abs_c[-1], ord_c[-1])
+        x = abs_c[-1] + delta*vecteur_courbe_normalisé(v)[0]
+        y = ord_c[-1] + delta*vecteur_courbe_normalisé(v)[1]
         if x<=0 : 
             direc = -1
-        while (0<= courbe_abs[-1] <= 1 and 0<= courbe_ord[-1] <= 1) :
-            v = gradient(f, courbe_abs[-1], courbe_ord[-1])
-            x = courbe_abs[-1] + direc*delta*vecteur_courbe_normalisé(v)[0]
-            y = courbe_ord[-1] + direc*delta*vecteur_courbe_normalisé(v)[1]
-            courbe_abs.append(x)
-            courbe_ord.append(y)
-        courbe_abs.pop()
-        courbe_ord.pop()
-    return(courbe_abs, courbe_ord)
+        while (0<= abs_c[-1] <= 1 and 0<= ord_c[-1] <= 1) and distance_courbe([abs_c[-1], ord_c[-1]], [abs_c, ord_c]) >= delta**2 :
+            v = gradient(f, abs_c[-1], ord_c[-1])
+            x = abs_c[-1] + direc*delta*vecteur_courbe_normalisé(v)[0]
+            y = ord_c[-1] + direc*delta*vecteur_courbe_normalisé(v)[1]
+            abs_c.append(x)
+            ord_c.append(y)
+        abs_c.pop()
+        ord_c.pop()
+    return(abs_c, ord_c)
 
 def f(x,y):
     return(3*x**2 + y**2) 
@@ -65,3 +78,5 @@ abscisses = simple_contour(f, 0.666, 0.01)[0]
 ordo = simple_contour(f, 0.666, 0.01)[1]
 plt.scatter(abscisses, ordo)
 plt.show()
+
+print(distance_courbe([0.5, 0.5], simple_contour(f, 0.666, 0.01)))
